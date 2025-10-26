@@ -65,7 +65,7 @@ namespace Youtube_Downloader_GUI
                 await DownloadFromUrl(url);
 
                 tbEnterUrl.Text = "";
-                lbDownloadStatus.Text = "Success! Find the downloaded video at C:\\transfer\\YouTube";
+                lbDownloadStatus.Text = $"Success! Find the downloaded video at {DOWNLOAD_PATH}";
             }
             catch (Exception ex)
             {
