@@ -36,9 +36,9 @@ internal class YoutubeDownloader
         // Configure download options for better progress reporting
         var optionSet = new OptionSet()
         {
-            NoPart = true,  // Don't use .part files
-            NoPlaylist = true,  // Don't download playlists
-            Format = "best"  // Download best quality
+            NoPart = true,  
+            NoPlaylist = true,  
+            Format = "best" 
         };
 
         // attempt to download with progress bar
@@ -55,7 +55,7 @@ internal class YoutubeDownloader
 
                 var progress = new Progress<DownloadProgress>(p =>
                 {
-                    // Start simulated progress when preprocessing is done
+                    // Start progress when preprocessing is done
                     if (p.State == DownloadState.PreProcessing || p.State == DownloadState.Downloading)
                     {
                         downloadStarted = true;
@@ -82,7 +82,7 @@ internal class YoutubeDownloader
                 // Start the actual download in the background
                 var downloadTask = ytdlp.RunVideoDownload(url, progress: progress, overrideOptions: optionSet);
 
-                // Simulate progress while download is running
+                // progress while download is running
                 while (!downloadComplete)
                 {
                     if (downloadStarted && simulatedProgress < 95)
@@ -91,19 +91,19 @@ internal class YoutubeDownloader
                         double increment;
                         if (simulatedProgress < 20)
                         {
-                            increment = 0.5; // Slow start
+                            increment = 0.5; 
                         }
                         else if (simulatedProgress < 50)
                         {
-                            increment = 1.5; // Medium speed
+                            increment = 1.5; 
                         }
                         else if (simulatedProgress < 80)
                         {
-                            increment = 2.5; // Faster
+                            increment = 2.5; 
                         }
                         else
                         {
-                            increment = 1.0; // Slow down near end (wait for actual completion)
+                            increment = 1.0; 
                         }
 
                         simulatedProgress += increment;
