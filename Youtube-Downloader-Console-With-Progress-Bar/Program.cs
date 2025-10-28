@@ -1,4 +1,6 @@
-﻿namespace Youtube_Downloader_Console_With_Progress_Bar;
+﻿using Spectre.Console;
+
+namespace Youtube_Downloader_Console_With_Progress_Bar;
 
 class Program
 {
@@ -12,7 +14,8 @@ class Program
         {
             // reset the url
             url = null;
-            Console.WriteLine("Enter the YouTube url to download: ");
+            AnsiConsole.WriteLine();
+            AnsiConsole.MarkupLine("[cyan]Enter the YouTube url to download:[/]");
             // loop to get valid url
             while (url == null)
             {
@@ -24,11 +27,11 @@ class Program
             try
             {
                 await downloader.DownloadFromUrl(url);
-                Console.WriteLine("Success! Find the downloaded video at C:\\transfer\\YouTube");
+                AnsiConsole.MarkupLine("[green]Success![/] Find the downloaded video at C:\\transfer\\YouTube");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error: {ex.Message}");
+                AnsiConsole.MarkupLine($"[red]Error:[/] {ex.Message}");
             }
         }
 

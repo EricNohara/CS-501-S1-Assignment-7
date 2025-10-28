@@ -1,4 +1,6 @@
 ﻿using YoutubeDLSharp;
+using YoutubeDLSharp.Options;
+using Spectre.Console;
 
 namespace Youtube_Downloader_Console_With_Progress_Bar;
 
@@ -31,12 +33,100 @@ internal class YoutubeDownloader
         ytdlp.OutputFolder = DOWNLOAD_PATH;
         ytdlp.OutputFileTemplate = "%(title)s.%(ext)s";
 
-        // attempt to download
-        var res = await ytdlp.RunVideoDownload(url);
-
-        if (!res.Success)
+        // Configure download options for better progress reporting
+        var optionSet = new OptionSet()
         {
-            throw new Exception($"Download failed: {string.Join(Environment.NewLine, res.ErrorOutput)}");
-        }
+            NoPart = true,  // Don't use .part files
+            NoPlaylist = true,  // Don't download playlists
+            Format = "best"  // Download best quality
+        };
+
+        // attempt to download with progress bar
+        await AnsiConsole.Progress()
+            .AutoClear(false)
+            .StartAsync(async ctx =>
+            {
+                var task = ctx.AddTask("[green]Downloading video[/]");
+                task.MaxValue = 100;
+
+                bool downloadStarted = false;
+                bool downloadComplete = false;
+                double simulatedProgress = 0;
+
+                var progress = new Progress<DownloadProgress>(p =>
+                {
+                    // Start simulated progress when preprocessing is done
+                    if (p.State == DownloadState.PreProcessing || p.State == DownloadState.Downloading)
+                    {
+                        downloadStarted = true;
+                    }
+
+                    // Mark as complete when we get success state
+                    if (p.State == DownloadState.Success)
+                    {
+                        downloadComplete = true;
+                        task.Value = 100;
+                        task.Description = $"[green]Complete![/]";
+                    }
+
+                    // Update description with download info
+                    if (!string.IsNullOrEmpty(p.Data) && p.State != DownloadState.Error)
+                    {
+                        if (p.Data.Contains("Downloading") || p.Data.Contains("youtube"))
+                        {
+                            task.Description = $"[green]Downloading video...[/]";
+                        }
+                    }
+                });
+
+                // Start the actual download in the background
+                var downloadTask = ytdlp.RunVideoDownload(url, progress: progress, overrideOptions: optionSet);
+
+                // Simulate progress while download is running
+                while (!downloadComplete)
+                {
+                    if (downloadStarted && simulatedProgress < 95)
+                    {
+                        // Start slow, then speed up
+                        double increment;
+                        if (simulatedProgress < 20)
+                        {
+                            increment = 0.5; // Slow start
+                        }
+                        else if (simulatedProgress < 50)
+                        {
+                            increment = 1.5; // Medium speed
+                        }
+                        else if (simulatedProgress < 80)
+                        {
+                            increment = 2.5; // Faster
+                        }
+                        else
+                        {
+                            increment = 1.0; // Slow down near end (wait for actual completion)
+                        }
+
+                        simulatedProgress += increment;
+                        task.Value = simulatedProgress;
+                    }
+
+                    await Task.Delay(100); // Update every 100ms
+
+                    // Check if download finished
+                    if (downloadTask.IsCompleted)
+                    {
+                        break;
+                    }
+                }
+
+                var res = await downloadTask;
+
+                if (!res.Success)
+                {
+                    throw new Exception($"Download failed: {string.Join(Environment.NewLine, res.ErrorOutput)}");
+                }
+
+                task.Value = 100;
+            });
     }
 }
